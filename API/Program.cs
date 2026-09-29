@@ -1,41 +1,64 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using API;
+using API.Nswag;
+using Infa;
+using LinqToDB;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+var options = new DataOptions().UseSQLite(builder.Configuration["DB"] ?? "Data Source=dev.db");
+builder.Services.AddSingleton(new DataOptions<SatinRoadDatabase>(options));
+builder.Services.AddScoped<SatinRoadDatabase>();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<MyCustomExceptionHandler>();
+
+builder.Services.AddOpenApiDocument(settings =>
+    settings.SchemaSettings.SchemaProcessors.Add(new RequireNotNullableSchemaProcessor()));
+
+builder.Services.AddCors();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    app.MapOpenApi();
+    var db = scope.ServiceProvider.GetRequiredService<SatinRoadDatabase>();
+    SatinRoadSeed.EnsureSeeded(db);
 }
 
-app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
+app.UseExceptionHandler();
+app.UseCors(_ => _.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin().SetIsOriginAllowed(_ => true));
+app.UseOpenApi();
+app.UseSwaggerUi();
+app.MapControllers();
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+namespace API
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    public class MyCustomExceptionHandler : IExceptionHandler
+    {
+        public ValueTask<bool> TryHandleAsync(HttpContext httpContext,
+            Exception exception,
+            CancellationToken cancellationToken)
+        {
+            httpContext.Response.StatusCode = exception switch
+            {
+                ValidationException => StatusCodes.Status400BadRequest,
+                KeyNotFoundException => StatusCodes.Status404NotFound,
+                InvalidOperationException => StatusCodes.Status409Conflict,
+                _ => StatusCodes.Status500InternalServerError
+            };
+            httpContext.Response.WriteAsJsonAsync(new ProblemDetails
+            {
+                Title = exception.Message
+            });
+
+            return default;
+        }
+    }
 }
