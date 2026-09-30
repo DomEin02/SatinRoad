@@ -2,6 +2,7 @@ using API.Controllers;
 using Infa;
 using LinqToDB;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Configuration;
 
 namespace Tests;
 
@@ -11,6 +12,7 @@ public abstract class ApiTest : IDisposable
     protected readonly SatinRoadDatabase Db;
     protected readonly CategoriesController CategoriesController;
     protected readonly ProductsController ProductsController;
+    protected readonly AuthController AuthController;
 
     protected ApiTest()
     {
@@ -25,12 +27,22 @@ public abstract class ApiTest : IDisposable
 
         CategoriesController = new CategoriesController(Db);
         ProductsController = new ProductsController(Db);
+
+        // AuthController Jwt Settings
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Key"] = "test-secret-key-that-is-at-least-32-characters",
+                ["Jwt:Issuer"] = "SatinRoad"
+            })
+            .Build();
+        AuthController = new AuthController(Db, config);
     }
 
     public void Dispose()
     {
         Db.Dispose();
-        
+
         SqliteConnection.ClearAllPools();
 
         if (File.Exists(_dbPath))

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using System.ComponentModel.DataAnnotations;
 using API.Dtos;
 using Infa;
@@ -19,6 +20,7 @@ public class CategoriesController(SatinRoadDatabase db) : ControllerBase
             .ToList();
     }
     
+    [Authorize(Roles = "Admin")]
     [HttpPost(nameof(Create))]
     public CategoryResponse Create([FromBody] CategoryCreateRequest request)
     {
@@ -38,6 +40,7 @@ public class CategoriesController(SatinRoadDatabase db) : ControllerBase
         return new CategoryResponse(category);
     }
     
+    [Authorize(Roles = "Admin")]
     [HttpPatch(nameof(Update))]
     public CategoryResponse Update([FromBody] CategoryUpdateRequest request)
     {
@@ -55,6 +58,7 @@ public class CategoriesController(SatinRoadDatabase db) : ControllerBase
         return new CategoryResponse(category);
     }
     
+    [Authorize(Roles = "Admin")]
     [HttpDelete(nameof(Delete))]
     public void Delete([FromQuery] string id)
     {
