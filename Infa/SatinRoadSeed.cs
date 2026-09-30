@@ -5,8 +5,7 @@ namespace Infa;
 
 public static class SatinRoadSeed
 {
-    // Placeholder until issue #4 (Register and login) adds real password hashing.
-    public const string SeedPasswordHash = "seed-placeholder";
+    public const string SeedPassword = "password123";
 
     public static void EnsureSeeded(SatinRoadDatabase db)
     {
@@ -36,7 +35,7 @@ public static class SatinRoadSeed
             {
                 Id = IdOf(++id),
                 Username = username,
-                PasswordHash = SeedPasswordHash,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(SeedPassword),
                 Role = role,
                 CreatedAtUtc = DateTime.UtcNow
             };
