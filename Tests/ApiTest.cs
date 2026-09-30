@@ -1,7 +1,6 @@
 using API.Controllers;
 using Infa;
 using LinqToDB;
-using LinqToDB.Data;
 using Microsoft.Data.Sqlite;
 
 namespace Tests;
@@ -11,6 +10,7 @@ public abstract class ApiTest : IDisposable
     private readonly string _dbPath;
     protected readonly SatinRoadDatabase Db;
     protected readonly CategoriesController CategoriesController;
+    protected readonly ProductsController ProductsController;
 
     protected ApiTest()
     {
@@ -24,6 +24,7 @@ public abstract class ApiTest : IDisposable
         Db.CreateTable<Order>(tableOptions: TableOptions.CreateIfNotExists);
 
         CategoriesController = new CategoriesController(Db);
+        ProductsController = new ProductsController(Db);
     }
 
     public void Dispose()
