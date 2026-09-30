@@ -1,7 +1,6 @@
 using API.Controllers;
 using Infa;
 using LinqToDB;
-using LinqToDB.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 
@@ -12,6 +11,7 @@ public abstract class ApiTest : IDisposable
     private readonly string _dbPath;
     protected readonly SatinRoadDatabase Db;
     protected readonly CategoriesController CategoriesController;
+    protected readonly ProductsController ProductsController;
     protected readonly AuthController AuthController;
 
     protected ApiTest()
@@ -26,7 +26,8 @@ public abstract class ApiTest : IDisposable
         Db.CreateTable<Order>(tableOptions: TableOptions.CreateIfNotExists);
 
         CategoriesController = new CategoriesController(Db);
-        
+        ProductsController = new ProductsController(Db);
+
         // AuthController Jwt Settings
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -41,7 +42,7 @@ public abstract class ApiTest : IDisposable
     public void Dispose()
     {
         Db.Dispose();
-        
+
         SqliteConnection.ClearAllPools();
 
         if (File.Exists(_dbPath))
