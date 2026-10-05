@@ -3,6 +3,10 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "bun --hot index.html",
+    "generate": "swagger-typescript-api generate -p http://localhost:5167/swagger/v1/swagger.json -o ./src -n Api.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/react": "^19.3.0",
