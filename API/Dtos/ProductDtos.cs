@@ -16,6 +16,9 @@ public record ProductUpdateRequest(
     int StockCount,
     string CategoryId);
 
+// Bruges når en vendor justerer sit lager op eller ned (fx +10 eller -3)
+public record StockAdjustmentRequest(string ProductId, int ChangeBy);
+
 public class ProductResponse
 {
     public string Id { get; }
@@ -39,4 +42,3 @@ public class ProductResponse
         CreatedAtUtc = product.CreatedAtUtc;
     }
 }
-    
