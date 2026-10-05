@@ -13,8 +13,9 @@ public class OrderResponse
     public bool DiscountApplied { get; }
     public decimal TotalPriceDkk { get; }
     public DateTime CreatedAtUtc { get; }
+    public bool VendorWasRaided { get; }
 
-    public OrderResponse(Infa.Order order)
+    public OrderResponse(Infa.Order order, bool vendorWasRaided = false)
     {
         Id = order.Id;
         BuyerId = order.BuyerId;
@@ -25,5 +26,6 @@ public class OrderResponse
         DiscountApplied = order.DiscountApplied;
         TotalPriceDkk = order.TotalPriceDkk;
         CreatedAtUtc = order.CreatedAtUtc;
+        VendorWasRaided = vendorWasRaided;
     }
 }

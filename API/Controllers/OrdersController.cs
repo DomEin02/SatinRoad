@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [Route("[controller]")]
-public class OrdersController(SatinRoadDatabase db) : ControllerBase
+public class OrdersController(SatinRoadDatabase db, IRandomProvider random) : ControllerBase
 {
     [Authorize]
     [HttpPost(nameof(Buy))]
