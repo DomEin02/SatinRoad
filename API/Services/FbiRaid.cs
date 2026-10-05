@@ -21,6 +21,6 @@ public static class FbiRaid
 
     public static bool IsRaid(double roll)
     {
-        throw new NotImplementedException();
+        return roll < Chance;
     }
 }
