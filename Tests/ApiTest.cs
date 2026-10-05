@@ -1,6 +1,9 @@
+using System.Security.Claims;
 using API.Controllers;
 using Infa;
 using LinqToDB;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 
@@ -13,6 +16,7 @@ public abstract class ApiTest : IDisposable
     protected readonly CategoriesController CategoriesController;
     protected readonly ProductsController ProductsController;
     protected readonly AuthController AuthController;
+    protected readonly OrdersController OrdersController;
 
     protected ApiTest()
     {
@@ -27,6 +31,7 @@ public abstract class ApiTest : IDisposable
 
         CategoriesController = new CategoriesController(Db);
         ProductsController = new ProductsController(Db);
+        OrdersController = new OrdersController(Db);
 
         // AuthController Jwt Settings
         var config = new ConfigurationBuilder()
@@ -37,6 +42,16 @@ public abstract class ApiTest : IDisposable
             })
             .Build();
         AuthController = new AuthController(Db, config);
+    }
+
+    // Pretends this user is logged in, by giving the controller the same claim a real token carries
+    protected void LoginAs(string userId)
+    {
+        var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, "Test");
+        OrdersController.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) }
+        };
     }
 
     public void Dispose()
