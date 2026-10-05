@@ -82,4 +82,30 @@ public class ProductsController(SatinRoadDatabase db) : ControllerBase
 
         db.Delete(product);
     }
+
+    [HttpGet(nameof(GetByVendor))]
+    public List<ProductResponse> GetByVendor([FromQuery] string vendorId)
+    {
+        var products = db.Products()
+            .Where(p => p.VendorId == vendorId)
+            .OrderBy(p => p.Name)
+            .ToList();
+        
+        return products.Select(p => new ProductResponse(p)).ToList();
+    }
+
+    [HttpPatch(nameof(AdjustStock))]
+    public ProductResponse AdjustStock([FromBody] StockAdjustmentRequest request)
+    {
+        var product = db.Products().FirstOrDefault(p => p.Id == request.ProductId)
+            ?? throw new KeyNotFoundException("Product not found.");
+
+        var newStock = product.StockCount + request.ChangeBy;
+        if (newStock < 0)
+            throw new ValidationException("Stock cannot go below zero.");
+
+        product.StockCount = newStock;
+        db.Update(product);
+        return new ProductResponse(product);
+    }
 }
