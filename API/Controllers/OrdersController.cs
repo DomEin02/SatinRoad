@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using API.Dtos;
+using API.Services;
 using Infa;
 using LinqToDB;
 using Microsoft.AspNetCore.Authorization;
@@ -15,9 +16,10 @@ public class OrdersController(SatinRoadDatabase db) : ControllerBase
     [HttpPost(nameof(Buy))]
     public OrderResponse Buy([FromBody] BuyRequest request)
     {
-        // The buyer is whoever is logged in, from token not request.
+        // The buyer is whoever is logged in. It is read from the token, never from the request.
         var buyerId = CurrentUserId();
-        
+
+        // 1) Unhappy path
         if (request.Quantity < 1)
             throw new ValidationException("Quantity must be at least 1.");
 
@@ -30,28 +32,33 @@ public class OrdersController(SatinRoadDatabase db) : ControllerBase
         if (product.StockCount < request.Quantity)
             throw new InvalidOperationException("Not enough in stock.");
 
-        // 2) Build the order
+        // 2) Loyalty discount: count this buyer's earlier orders with this vendor
+        var vendorId = product.VendorId;
+        var previousOrders = db.Orders().Count(o => o.BuyerId == buyerId && o.VendorId == vendorId);
+        var discountApplies = DiscountCalculator.QualifiesForDiscount(previousOrders);
+
+        // 3) Build the order. The price is copied now, because the vendor may change it later.
         var order = new Order
         {
             Id = Guid.NewGuid().ToString(),
             BuyerId = buyerId,
-            VendorId = product.VendorId,
+            VendorId = vendorId,
             ProductId = product.Id,
             Quantity = request.Quantity,
             UnitPriceDkk = product.PriceDkk,
-            DiscountApplied = false,
-            TotalPriceDkk = product.PriceDkk * request.Quantity,
+            DiscountApplied = discountApplies,
+            TotalPriceDkk = DiscountCalculator.TotalPrice(product.PriceDkk, request.Quantity, discountApplies),
             CreatedAtUtc = DateTime.UtcNow
         };
 
-        // 3) Save both changes together: lower the stock and store the order
+        // 4) Save both changes together: lower the stock and store the order
         using var transaction = db.BeginTransaction();
         product.StockCount -= request.Quantity;
         db.Update(product);
         db.Insert(order);
         transaction.Commit();
 
-        // 4) Map and return
+        // 5) Map and return
         return new OrderResponse(order);
     }
 
