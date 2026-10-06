@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Login } from "./src/Login";
 import { CategoryAdmin } from "./src/CategoryAdmin";
 import { Listings } from "./src/Listings";
+import { Landing } from "./src/Landing";
 import { clearSession, getUser } from "./src/apiClient";
 import type { UserResponse } from "./src/Api";
 
@@ -17,15 +18,21 @@ export function App() {
         <div className="App">
             <h1>Satin Road</h1>
             {user ? (
+                <p>
+                    Logged in as {user.username} ({user.role}) <button onClick={logout}>Log out</button>
+                </p>
+            ) : (
+                <Login onLoggedIn={setUser} />
+            )}
+
+            {/* Forsiden er offentlig: alle kan se featured vendors og listings */}
+            <Landing />
+
+            {user && (
                 <>
-                    <p>
-                        Logged in as {user.username} ({user.role}) <button onClick={logout}>Log out</button>
-                    </p>
                     <CategoryAdmin user={user} />
                     <Listings user={user} />
                 </>
-            ) : (
-                <Login onLoggedIn={setUser} />
             )}
         </div>
     );

@@ -45,6 +45,28 @@ export interface CategoryUpdateRequest {
   name: string;
 }
 
+export interface OrderResponse {
+  id: string;
+  buyerId: string;
+  vendorId: string;
+  productId: string;
+  /** @format int32 */
+  quantity: number;
+  /** @format decimal */
+  unitPriceDkk: number;
+  discountApplied: boolean;
+  /** @format decimal */
+  totalPriceDkk: number;
+  /** @format date-time */
+  createdAtUtc: string;
+}
+
+export interface BuyRequest {
+  productId: string;
+  /** @format int32 */
+  quantity: number;
+}
+
 export interface ProductResponse {
   id: string;
   name: string;
@@ -85,6 +107,13 @@ export interface StockAdjustmentRequest {
   productId: string;
   /** @format int32 */
   changeBy: number;
+}
+
+export interface FeaturedVendorResponse {
+  vendorId: string;
+  username: string;
+  /** @format int32 */
+  orderCount: number;
 }
 
 export type QueryParamsType = Record<string | number, any>;
@@ -467,6 +496,43 @@ export class Api<
         ...params,
       }),
   };
+  orders = {
+    /**
+     * No description
+     *
+     * @tags Orders
+     * @name OrdersBuy
+     * @request POST:/Orders/Buy
+     * @secure
+     */
+    ordersBuy: (data: BuyRequest, params: RequestParams = {}) =>
+      this.request<OrderResponse, any>({
+        path: `/Orders/Buy`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Orders
+     * @name OrdersGetMine
+     * @request GET:/Orders/GetMine
+     * @secure
+     */
+    ordersGetMine: (params: RequestParams = {}) =>
+      this.request<OrderResponse[], any>({
+        path: `/Orders/GetMine`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
   products = {
     /**
      * No description
@@ -574,6 +640,22 @@ export class Api<
         method: "PATCH",
         body: data,
         type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+  };
+  vendors = {
+    /**
+     * No description
+     *
+     * @tags Vendors
+     * @name VendorsGetFeatured
+     * @request GET:/Vendors/GetFeatured
+     */
+    vendorsGetFeatured: (params: RequestParams = {}) =>
+      this.request<FeaturedVendorResponse[], any>({
+        path: `/Vendors/GetFeatured`,
+        method: "GET",
         format: "json",
         ...params,
       }),

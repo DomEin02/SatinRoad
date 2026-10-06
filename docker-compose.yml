@@ -1,0 +1,20 @@
+services:
+  api:
+    build: .
+    environment:
+      DB: "Data Source=/data/satinroad.db"
+      Jwt__Key: ${JWT_KEY:?Sæt JWT_KEY i .env}
+    volumes:
+      - satinroad-data:/data
+    ports:
+      - "8080:8080"
+
+  client:
+    build: ./client
+    ports:
+      - "8081:80"
+    depends_on:
+      - api
+
+volumes:
+  satinroad-data:

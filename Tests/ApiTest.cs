@@ -17,6 +17,7 @@ public abstract class ApiTest : IDisposable
     protected readonly ProductsController ProductsController;
     protected readonly AuthController AuthController;
     protected readonly OrdersController OrdersController;
+    protected readonly VendorsController VendorsController;
     protected readonly FakeRandomProvider RandomProvider = new();
 
     protected ApiTest()
@@ -33,6 +34,7 @@ public abstract class ApiTest : IDisposable
         CategoriesController = new CategoriesController(Db);
         ProductsController = new ProductsController(Db);
         OrdersController = new OrdersController(Db, RandomProvider);
+        VendorsController = new VendorsController(Db);
 
         // AuthController Jwt Settings
         var config = new ConfigurationBuilder()

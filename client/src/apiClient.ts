@@ -24,7 +24,7 @@ export function getUser(): UserResponse | null {
 }
 
 export const api = new Api({
-    baseUrl: "http://localhost:5167", customFetch: (input, init) => {
+    baseUrl: location.port === "3000" ? "http://localhost:5167" : "/api", customFetch: (input, init) => {
         const headers = new Headers(init?.headers);
         const token = localStorage.getItem(TOKEN_KEY);
         if (token) headers.set("Authorization", `Bearer ${token}`);
