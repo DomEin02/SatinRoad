@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api, errorMessage } from "./apiClient";
 import type { FeaturedVendorResponse, ProductResponse } from "./Api";
 
-export function Landing() {
+export function Landing({ refreshKey }: { refreshKey: number }) {
     const [featured, setFeatured] = useState<FeaturedVendorResponse[]>([]);
     const [products, setProducts] = useState<ProductResponse[]>([]);
     const [error, setError] = useState("");
@@ -17,7 +17,7 @@ export function Landing() {
             setProducts(p.data);
         }
         load().catch((e) => setError(errorMessage(e)));
-    }, []);
+    }, [refreshKey]);
     
     const featuredIds = new Set(featured.map((v) => v.vendorId));
     

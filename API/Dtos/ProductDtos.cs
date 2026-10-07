@@ -5,8 +5,7 @@ public record ProductCreateRequest(
     string Description,
     decimal PriceDkk,
     int StockCount,
-    string CategoryId,
-    string VendorId);
+    string CategoryId);
 
 public record ProductUpdateRequest(
     string Id,
