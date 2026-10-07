@@ -51,10 +51,12 @@ public abstract class ApiTest : IDisposable
     protected void LoginAs(string userId)
     {
         var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, "Test");
-        OrdersController.ControllerContext = new ControllerContext
+        var context = new ControllerContext
         {
             HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) }
         };
+        OrdersController.ControllerContext = context;
+        ProductsController.ControllerContext = context;
     }
 
     public void Dispose()

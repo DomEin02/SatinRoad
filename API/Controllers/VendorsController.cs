@@ -8,7 +8,7 @@ namespace API.Controllers;
 [Route("[controller]")]
 public class VendorsController(SatinRoadDatabase db) : ControllerBase
 {
-    public const int FeaturedTheshold = 100;
+    public const int FeaturedThreshold = 100;
 
     [HttpGet(nameof(GetFeatured))]
     public List<FeaturedVendorResponse> GetFeatured()
@@ -16,12 +16,12 @@ public class VendorsController(SatinRoadDatabase db) : ControllerBase
         var counts = db.Orders()
             .GroupBy(o => o.VendorId)
             .Select(g => new { VendorId = g.Key, OrderCount = g.Count() })
-            .Where(x => x.OrderCount > FeaturedTheshold)
+            .Where(x => x.OrderCount > FeaturedThreshold)
             .ToList();
         
-        var VendorIds = counts.Select(c => c.VendorId).ToList();
+        var vendorIds = counts.Select(c => c.VendorId).ToList();
         var users = db.Users()
-            .Where(u => VendorIds.Contains(u.Id) && !u.IsShutDown)
+            .Where(u => vendorIds.Contains(u.Id) && !u.IsShutDown)
             .ToList();
         
         return counts

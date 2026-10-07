@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using API.Dtos;
 using Infa;
 using LinqToDB;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -17,10 +19,20 @@ public class ProductsController(SatinRoadDatabase db) : ControllerBase
             .Select(p => new ProductResponse(p))
             .ToList();
     }
-    
+
+    [Authorize]
     [HttpPost(nameof(Create))]
     public ProductResponse Create([FromBody] ProductCreateRequest request)
     {
+        // The vendor is whoever is logged in, from the token, never from the request.
+        var vendorId = CurrentUserId();
+
+        // A vendor that has been shut down (or no longer exists) cannot sell anything,
+        // even if their old token is still valid.
+        var vendor = db.Users().FirstOrDefault(u => u.Id == vendorId);
+        if (vendor == null || vendor.IsShutDown)
+            throw new UnauthorizedAccessException("This account cannot create products.");
+
         if (string.IsNullOrWhiteSpace(request.Name))
             throw new ValidationException("Name is required.");
         if (request.PriceDkk < 0)
@@ -40,19 +52,19 @@ public class ProductsController(SatinRoadDatabase db) : ControllerBase
             PriceDkk = request.PriceDkk,
             StockCount = request.StockCount,
             CategoryId = category.Id,
-            VendorId = request.VendorId,
+            VendorId = vendorId,
             CreatedAtUtc = DateTime.UtcNow
         };
 
         db.Insert(product);
         return new ProductResponse(product);
     }
-    
+
+    [Authorize]
     [HttpPatch(nameof(Update))]
     public ProductResponse Update([FromBody] ProductUpdateRequest request)
     {
-        var product = db.Products().FirstOrDefault(p => p.Id == request.Id)
-                     ?? throw new KeyNotFoundException("Product not found.");
+        var product = GetOwnProduct(request.Id);
 
         if (string.IsNullOrWhiteSpace(request.Name))
             throw new ValidationException("Name is required.");
@@ -73,12 +85,12 @@ public class ProductsController(SatinRoadDatabase db) : ControllerBase
         db.Update(product);
         return new ProductResponse(product);
     }
-    
+
+    [Authorize]
     [HttpDelete(nameof(Delete))]
     public void Delete([FromQuery] string id)
     {
-        var product = db.Products().FirstOrDefault(p => p.Id == id)
-                     ?? throw new KeyNotFoundException("Product not found.");
+        var product = GetOwnProduct(id);
 
         db.Delete(product);
     }
@@ -90,15 +102,15 @@ public class ProductsController(SatinRoadDatabase db) : ControllerBase
             .Where(p => p.VendorId == vendorId)
             .OrderBy(p => p.Name)
             .ToList();
-        
+
         return products.Select(p => new ProductResponse(p)).ToList();
     }
 
+    [Authorize]
     [HttpPatch(nameof(AdjustStock))]
     public ProductResponse AdjustStock([FromBody] StockAdjustmentRequest request)
     {
-        var product = db.Products().FirstOrDefault(p => p.Id == request.ProductId)
-            ?? throw new KeyNotFoundException("Product not found.");
+        var product = GetOwnProduct(request.ProductId);
 
         var newStock = product.StockCount + request.ChangeBy;
         if (newStock < 0)
@@ -107,5 +119,25 @@ public class ProductsController(SatinRoadDatabase db) : ControllerBase
         product.StockCount = newStock;
         db.Update(product);
         return new ProductResponse(product);
+    }
+
+    // Finds a product and makes sure it belongs to the logged-in user
+    private Product GetOwnProduct(string productId)
+    {
+        var userId = CurrentUserId();
+
+        var product = db.Products().FirstOrDefault(p => p.Id == productId)
+                      ?? throw new KeyNotFoundException("Product not found.");
+
+        if (product.VendorId != userId)
+            throw new UnauthorizedAccessException("You can only change your own products.");
+
+        return product;
+    }
+
+    private string CurrentUserId()
+    {
+        return User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+               ?? throw new UnauthorizedAccessException("You must be logged in.");
     }
 }
