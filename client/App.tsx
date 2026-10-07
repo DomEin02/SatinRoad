@@ -5,6 +5,7 @@ import { Listings } from "./src/Listings";
 import { Landing } from "./src/Landing";
 import { clearSession, getUser } from "./src/apiClient";
 import type { UserResponse } from "./src/Api";
+import { MyOrders } from "./src/MyOrders";
 
 export function App() {
     const [user, setUser] = useState<UserResponse | null>(getUser());
@@ -13,6 +14,10 @@ export function App() {
     function logout() {
         clearSession();
         setUser(null);
+    }
+    
+    function refresh() {
+        setListingsVersion((v) => v + 1);
     }
 
     return (
@@ -27,12 +32,13 @@ export function App() {
             )}
 
             {/* Forsiden er offentlig: alle kan se featured vendors og listings */}
-            <Landing refreshKey={listingsVersion} />
+            <Landing user={user} refreshKey={listingsVersion} onPurchased={refresh} />
 
             {user && (
                 <>
                     <CategoryAdmin user={user} />
-                    <Listings user={user} onChanged={() => setListingsVersion((v) => v + 1)} />
+                    <Listings user={user} onChanged={refresh} />
+                    <MyOrders refreshKey={listingsVersion} />
                 </>
             )}
         </div>
