@@ -8,6 +8,7 @@ import type { UserResponse } from "./src/Api";
 
 export function App() {
     const [user, setUser] = useState<UserResponse | null>(getUser());
+    const [listingsVersion, setListingsVersion] = useState(0);
 
     function logout() {
         clearSession();
@@ -26,12 +27,12 @@ export function App() {
             )}
 
             {/* Forsiden er offentlig: alle kan se featured vendors og listings */}
-            <Landing />
+            <Landing refreshKey={listingsVersion} />
 
             {user && (
                 <>
                     <CategoryAdmin user={user} />
-                    <Listings user={user} />
+                    <Listings user={user} onChanged={() => setListingsVersion((v) => v + 1)} />
                 </>
             )}
         </div>

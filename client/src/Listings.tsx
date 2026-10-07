@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { api, errorMessage } from "./apiClient";
 import type { CategoryResponse, ProductResponse, UserResponse } from "./Api";
 
-export function Listings({ user }: { user: UserResponse }) {
+export function Listings({ user, onChanged }: { user: UserResponse; onChanged: () => void }) {
     const [categories, setCategories] = useState<CategoryResponse[]>([]);
     const [myProducts, setMyProducts] = useState<ProductResponse[]>([]);
     const [name, setName] = useState("");
@@ -40,7 +40,6 @@ export function Listings({ user }: { user: UserResponse }) {
                 priceDkk: Number(price),
                 stockCount: Number(stock),
                 categoryId,
-                vendorId: user.id,
             });
             // Tøm formularen og opdatér listen
             setName("");
@@ -48,6 +47,7 @@ export function Listings({ user }: { user: UserResponse }) {
             setPrice("");
             setStock("");
             await loadProducts();
+            onChanged();
         } catch (err) {
             setError(errorMessage(err));
         }

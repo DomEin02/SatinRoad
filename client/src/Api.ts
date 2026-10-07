@@ -59,6 +59,7 @@ export interface OrderResponse {
   totalPriceDkk: number;
   /** @format date-time */
   createdAtUtc: string;
+  vendorWasRaided: boolean;
 }
 
 export interface BuyRequest {
@@ -89,7 +90,6 @@ export interface ProductCreateRequest {
   /** @format int32 */
   stockCount: number;
   categoryId: string;
-  vendorId: string;
 }
 
 export interface ProductUpdateRequest {
@@ -555,12 +555,14 @@ export class Api<
      * @tags Products
      * @name ProductsCreate
      * @request POST:/Products/Create
+     * @secure
      */
     productsCreate: (data: ProductCreateRequest, params: RequestParams = {}) =>
       this.request<ProductResponse, any>({
         path: `/Products/Create`,
         method: "POST",
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
@@ -572,12 +574,14 @@ export class Api<
      * @tags Products
      * @name ProductsUpdate
      * @request PATCH:/Products/Update
+     * @secure
      */
     productsUpdate: (data: ProductUpdateRequest, params: RequestParams = {}) =>
       this.request<ProductResponse, any>({
         path: `/Products/Update`,
         method: "PATCH",
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
@@ -589,6 +593,7 @@ export class Api<
      * @tags Products
      * @name ProductsDelete
      * @request DELETE:/Products/Delete
+     * @secure
      */
     productsDelete: (
       query?: {
@@ -600,6 +605,7 @@ export class Api<
         path: `/Products/Delete`,
         method: "DELETE",
         query: query,
+        secure: true,
         ...params,
       }),
 
@@ -630,6 +636,7 @@ export class Api<
      * @tags Products
      * @name ProductsAdjustStock
      * @request PATCH:/Products/AdjustStock
+     * @secure
      */
     productsAdjustStock: (
       data: StockAdjustmentRequest,
@@ -639,6 +646,7 @@ export class Api<
         path: `/Products/AdjustStock`,
         method: "PATCH",
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
