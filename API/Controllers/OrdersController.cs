@@ -10,13 +10,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [Route("[controller]")]
-public class OrdersController(SatinRoadDatabase db) : ControllerBase
+public class OrdersController(SatinRoadDatabase db, IRandomProvider random) : ControllerBase
 {
     [Authorize]
     [HttpPost(nameof(Buy))]
     public OrderResponse Buy([FromBody] BuyRequest request)
     {
-        // The buyer is whoever is logged in. It is read from the token, never from the request.
+        // The buyer is whoever is logged in, from token, never from the request.
         var buyerId = CurrentUserId();
 
         // 1) Unhappy path
@@ -51,15 +51,33 @@ public class OrdersController(SatinRoadDatabase db) : ControllerBase
             CreatedAtUtc = DateTime.UtcNow
         };
 
-        // 4) Save both changes together: lower the stock and store the order
+        // 4) FBI check: every purchase has a 1% chance that the buyer is FBI
+        var vendorWasRaided = FbiRaid.IsRaid(random.NextDouble());
+
+        // 5) Save everything together: the stock, the order and, on a raid, the shutdown
         using var transaction = db.BeginTransaction();
         product.StockCount -= request.Quantity;
         db.Update(product);
         db.Insert(order);
+
+        if (vendorWasRaided)
+        {
+            // The vendor is shut down permanently...
+            db.Users()
+                .Where(u => u.Id == vendorId)
+                .Set(u => u.IsShutDown, true)
+                .Update();
+
+            // ...and all their products are removed
+            db.Products()
+                .Where(p => p.VendorId == vendorId)
+                .Delete();
+        }
+
         transaction.Commit();
 
-        // 5) Map and return
-        return new OrderResponse(order);
+        // 6) Map and return
+        return new OrderResponse(order, vendorWasRaided);
     }
 
     [Authorize]

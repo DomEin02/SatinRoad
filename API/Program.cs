@@ -1,3 +1,4 @@
+using API.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -17,6 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 var options = new DataOptions().UseSQLite(builder.Configuration["DB"] ?? "Data Source=dev.db");
 builder.Services.AddSingleton(new DataOptions<SatinRoadDatabase>(options));
 builder.Services.AddScoped<SatinRoadDatabase>();
+builder.Services.AddSingleton<IRandomProvider, SystemRandomProvider>();
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
