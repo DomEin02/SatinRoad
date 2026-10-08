@@ -21,7 +21,7 @@ export function App() {
     }
 
     return (
-        <div className="App">
+        <main className="App">
             <h1>Satin Road</h1>
             {user ? (
                 <p>
@@ -41,7 +41,7 @@ export function App() {
                     <MyOrders refreshKey={listingsVersion} />
                 </>
             )}
-        </div>
+        </main>
     );
 }
 
