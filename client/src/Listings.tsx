@@ -53,6 +53,30 @@ export function Listings({ user, onChanged }: { user: UserResponse; onChanged: (
         }
     }
 
+    // Ændrer lageret på et af mine produkter (+1 eller -1)
+    async function changeStock(product: ProductResponse, change: number) {
+        setError("");
+        try {
+            await api.products.productsAdjustStock({ productId: product.id, changeBy: change });
+            await loadProducts();
+            onChanged(); // opdaterer også "All listings"
+        } catch (err) {
+            setError(errorMessage(err));
+        }
+    }
+
+    // Sletter et af mine produkter
+    async function remove(product: ProductResponse) {
+        setError("");
+        try {
+            await api.products.productsDelete({ id: product.id });
+            await loadProducts();
+            onChanged();
+        } catch (err) {
+            setError(errorMessage(err));
+        }
+    }
+
     return (
         <div>
             <h2>Create a listing</h2>
@@ -77,7 +101,10 @@ export function Listings({ user, onChanged }: { user: UserResponse; onChanged: (
                 <ul>
                     {myProducts.map((p) => (
                         <li key={p.id}>
-                            {p.name} - {p.priceDkk} DKK (stock: {p.stockCount})
+                            {p.name} - {p.priceDkk} DKK (stock: {p.stockCount}){" "}
+                            <button onClick={() => changeStock(p, -1)}>-1</button>
+                            <button onClick={() => changeStock(p, 1)}>+1</button>
+                            <button onClick={() => remove(p)}>Delete</button>
                         </li>
                     ))}
                 </ul>
